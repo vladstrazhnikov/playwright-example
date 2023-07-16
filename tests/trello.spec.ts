@@ -1,5 +1,6 @@
-import { test, expect, chromium, request } from '@playwright/test';
-import { deleteBoardRequest } from './api/api.spec';
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../pages/Login.page';
+import { deleteBoardRequest } from '../api/api.spec';
 import fs from 'fs';
 
 const username = process.env._USERNAME || '';
@@ -23,20 +24,14 @@ test.describe('Trello', () => {
     // 2. Add ticket in To Do
     // 3. Upload file in ticket
     test('should create new board', async ({ page, request }) => {
+        const loginPage = new LoginPage(page);
+
         await createFile(filePath, content);
         const listName: string = 'To Do';
         const ticketName: string = 'New ticket';
 
         console.log('Logging in...');
-        await page.click('a[data-uuid$="login"]');
-        await page.waitForSelector('#user');
-        await page.type('#user', username, { delay: 100 });
-        // await page.locator('#user').fill(username);
-        await page.click('#login');
-        await page.waitForSelector('#password');
-        await page.type('#password', password, { delay: 100 });
-        await page.waitForSelector('#login-submit');
-        await page.click('#login-submit');
+        loginPage.login(username, password);
         console.log('Logging in done.');
 
         // const response = await request.get('https://api.trello.com/1/boards/{boardid}?key={}&token={}');
