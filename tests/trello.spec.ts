@@ -1,10 +1,11 @@
 import { test, expect, chromium, request } from '@playwright/test';
+import { deleteBoardRequest } from './api/api.spec';
 import fs from 'fs';
 
 const username = process.env._USERNAME || '';
 const password = process.env._PASSWORD || '';
-const key = process.env._SECRET_KEY;
-const token = process.env._TOKEN;
+const key = process.env._SECRET_KEY || '';
+const token = process.env._TOKEN || '';
 const url = 'https://api.trello.com';
 const filePath = 'fixtures/data.txt';
 const content = 'message';
@@ -22,11 +23,11 @@ test.describe('Trello', () => {
     // 2. Add ticket in To Do
     // 3. Upload file in ticket
     test('should create new board', async ({ page, request }) => {
-        createFile(filePath, content);
+        await createFile(filePath, content);
         const listName: string = 'To Do';
         const ticketName: string = 'New ticket';
 
-        console.log('Logging in...')
+        console.log('Logging in...');
         await page.click('a[data-uuid$="login"]');
         await page.waitForSelector('#user');
         await page.type('#user', username, { delay: 100 });
@@ -42,7 +43,7 @@ test.describe('Trello', () => {
         // const respBody = JSON.parse(await response.text());
         // console.log(respBody);
 
-        console.log('Creating new board...')
+        console.log('Creating new board...');
         const boardName: string = 'Playwright project board';
         await page.getByTestId('header-create-menu-button').click();
         await page.getByTestId('header-create-board-button').click();
@@ -74,16 +75,13 @@ test.describe('Trello', () => {
         // await page.getByText('new ticket').click({ button: 'right' });
         // await page.waitForSelector('quick-card-editor-open-card');
         // await page.getByTestId('quick-card-editor-open-card').click({);
-        await page.click('.window-sidebar a.js-attach');
-        await page.locator('input.js-attach-file').setInputFiles(filePath);
+        await page.click('.window-sidebar .js-react-root button [data-testid="AttachmentIcon"]');
+        await page.locator('#card-attachment-file-picker').setInputFiles(filePath);
         console.log('File uploaded');
 
         console.log('Deleting new board...');
-        const deleteResponse = page.waitForResponse(resp => resp.url().includes(`1/boards/${boardId}`));
-        await request.delete(`${url}/1/boards/${boardId}?key=${key}&token=${token}`);
-        const deleteBoardResponse = await deleteResponse;
-        // const respBodyDel = JSON.parse(await respDel.text());
-        console.log(deleteBoardResponse.status(), 'Board deleted');
+        const deleteBoardResponse = await deleteBoardRequest(request, url, boardId, key, token);
+        console.log('Board deleted', deleteBoardResponse.response.status(), deleteBoardResponse.json);
     });
 });
 
