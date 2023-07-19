@@ -1,9 +1,7 @@
 import { Page } from "@playwright/test";
 
 export class MainPage {
-    private page: Page;
-
-    constructor(page: Page) {
+    constructor(private page: Page) {
         this.page = page;
     }
 
@@ -14,4 +12,25 @@ export class MainPage {
     public get secondList(): string {
         return 'div[data-testid="list"]:nth-of-type(2)';
     }
+
+    async fillListNameInput(listName: string) {
+        this.page.fill('.list-name-input', listName);
+    }
+
+    async submitListButton() {
+        this.page.click('input[type="submit"]');
+    }
+
+    async clickAddCardButton() {
+        this.page.click('.js-add-a-card');
+    }
+
+    async fillCardNameInput(cardName: string) {
+        this.page.fill('.list-card-composer-textarea', cardName);
+    }
+
+    async submitCardButton() {
+        this.page.click('.cc-controls-section input[type="submit"]');
+    }
+
 }

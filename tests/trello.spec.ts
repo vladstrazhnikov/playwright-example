@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { FileGeneratorUtil } from '../utils/fileGenerator';
 import { LoginPage } from '../pages/Login.page';
 import { MainPage } from '../pages/Main.page';
+import { CardPage } from '../pages/Card.page';
 import { deleteBoardRequest, createBoardRequest, getLists, createCardRequest } from '../api/api.spec';
 
 const username = process.env._USERNAME || '';
@@ -27,6 +28,8 @@ test.describe('Trello', () => {
     // 4. Upload file in card
     test('should create new board', async ({ page, request }) => {
         const loginPage = new LoginPage(page);
+        const mainPage = new MainPage(page);
+        const cardPage = new CardPage(page);
 
         await FileGeneratorUtil.createFile(filePath, content);
 
@@ -64,11 +67,11 @@ test.describe('Trello', () => {
         console.log(response.status(), 'Board created');
 
         console.log('Creating new card...');
-        await page.fill('.list-name-input', listName);
-        await page.click('input[type="submit"]');
-        await page.click('.js-add-a-card');
-        await page.fill('.list-card-composer-textarea', cardName);
-        await page.click('.cc-controls-section input[type="submit"]');
+        await mainPage.fillListNameInput(listName);
+        await mainPage.submitListButton();
+        await mainPage.clickAddCardButton();
+        await mainPage.fillCardNameInput(cardName);
+        await mainPage.submitCardButton();
         console.log('Card created');
 
         console.log('Uploading file...');
@@ -76,8 +79,8 @@ test.describe('Trello', () => {
         // await page.getByText('new card').click({ button: 'right' });
         // await page.waitForSelector('quick-card-editor-open-card');
         // await page.getByTestId('quick-card-editor-open-card').click({);
-        await page.click('.window-sidebar .js-react-root button [data-testid="AttachmentIcon"]');
-        await page.locator('#card-attachment-file-picker').setInputFiles(filePath);
+        await page.click(cardPage.attachmentButton);
+        await page.locator(cardPage.cardFileInput).setInputFiles(filePath);
         console.log('File uploaded');
 
         console.log('Deleting new board...');
