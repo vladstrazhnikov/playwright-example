@@ -1,8 +1,8 @@
 import { test, expect, request } from '@playwright/test';
+import { FileGeneratorUtil } from '../utils/fileGenerator';
 import { LoginPage } from '../pages/Login.page';
 import { MainPage } from '../pages/Main.page';
 import { deleteBoardRequest, createBoardRequest, getLists, createCardRequest } from '../api/api.spec';
-import fs from 'fs';
 
 const username = process.env._USERNAME || '';
 const password = process.env._PASSWORD || '';
@@ -27,7 +27,7 @@ test.describe('Trello', () => {
     test('should create new board', async ({ page, request }) => {
         const loginPage = new LoginPage(page);
 
-        await createFile(filePath, content);
+        await FileGeneratorUtil.createFile(filePath, content);
 
         const listName: string = 'To Do';
         const ticketName: string = 'New ticket';
@@ -87,7 +87,7 @@ test.describe('Trello', () => {
 
 test('should drag n drop ticket', async ({ browser, request }) => {
     const boardName: string = 'Dragndrop board';
-    const cardName: string = 'Draggable card'; 
+    const cardName: string = 'Draggable card';
 
     console.log('Creating board');
     const createResponse = await createBoardRequest(request, url, key, token, boardName);
@@ -112,12 +112,3 @@ test('should drag n drop ticket', async ({ browser, request }) => {
     await page.dragAndDrop(mainPage.firstCard, mainPage.secondList);
     await deleteBoardRequest(request, url, boardId, key, token);
 });
-
-async function createFile(filePath, content) {
-    try {
-        await fs.promises.writeFile(filePath, content);
-        console.log(`File "${filePath}" created successfully.`);
-    } catch (error) {
-        console.error(`Error creating file "${filePath}":`, error);
-    }
-}
