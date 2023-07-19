@@ -1,5 +1,6 @@
 import { test, expect, request } from '@playwright/test';
 import { LoginPage } from '../pages/Login.page';
+import { MainPage } from '../pages/Main.page';
 import { deleteBoardRequest, createBoardRequest, getLists, createCardRequest } from '../api/api.spec';
 import fs from 'fs';
 
@@ -85,26 +86,30 @@ test.describe('Trello', () => {
 });
 
 test('should drag n drop ticket', async ({ browser, request }) => {
+    const boardName: string = 'Dragndrop board';
+    const cardName: string = 'Draggable card'; 
+
     console.log('Creating board');
-    const createResponse = await createBoardRequest(request, url, key, token, 'test board');
+    const createResponse = await createBoardRequest(request, url, key, token, boardName);
     const boardId = createResponse.json.id;
     console.log('Getting lists...');
     const getListsResponse = await getLists(request, url, boardId, key, token);
     const firstList = getListsResponse.json[0].id;
-    await createCardRequest(request, url, key, token, 'New Card', firstList);
+    await createCardRequest(request, url, key, token, cardName, firstList);
     // to generate *.json file use npx codegen --save-storage=trello.json
     const context = await browser.newContext({
         storageState: './trello.json'
     });
     const page = await context.newPage();
+    const mainPage = new MainPage(page);
     await page.waitForTimeout(3000);
     await page.goto('https://trello.com');
-    await page.getByText('test board').click();
-    // await page.locator('div[data-testid="list"]:first-of-type a[data-testid="trello-card"]').hover();
+    await page.getByText(boardName).click();
+    // await page.locator(mainPage.firstCard).hover();
     // await page.mouse.down();
-    // await page.locator('div[data-testid="list"]:nth-of-type(2)').hover();
+    // await page.locator(mainPage.secondList).hover();
     // await page.mouse.up();
-    await page.dragAndDrop('div[data-testid="list"]:first-of-type a[data-testid="trello-card"]', 'div[data-testid="list"]:nth-of-type(2)');
+    await page.dragAndDrop(mainPage.firstCard, mainPage.secondList);
     await deleteBoardRequest(request, url, boardId, key, token);
 });
 
