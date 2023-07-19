@@ -1,4 +1,4 @@
-import { test, expect, request } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { FileGeneratorUtil } from '../utils/fileGenerator';
 import { LoginPage } from '../pages/Login.page';
 import { MainPage } from '../pages/Main.page';
@@ -21,16 +21,17 @@ test.describe('Trello', () => {
     });
 
     // Test case steps:
-    // 1. Create new board
-    // 2. Add ticket in To Do
-    // 3. Upload file in ticket
+    // 1. Login to the app
+    // 2. Create new board
+    // 3. Add card in To Do list
+    // 4. Upload file in card
     test('should create new board', async ({ page, request }) => {
         const loginPage = new LoginPage(page);
 
         await FileGeneratorUtil.createFile(filePath, content);
 
         const listName: string = 'To Do';
-        const ticketName: string = 'New ticket';
+        const cardName: string = 'New card';
         const boardName: string = 'Playwright project board';
 
         console.log('Logging in...');
@@ -62,17 +63,17 @@ test.describe('Trello', () => {
         // console.log(respBody);
         console.log(response.status(), 'Board created');
 
-        console.log('Creating new ticket...');
+        console.log('Creating new card...');
         await page.fill('.list-name-input', listName);
         await page.click('input[type="submit"]');
         await page.click('.js-add-a-card');
-        await page.fill('.list-card-composer-textarea', ticketName);
+        await page.fill('.list-card-composer-textarea', cardName);
         await page.click('.cc-controls-section input[type="submit"]');
-        console.log('Ticket created');
+        console.log('Card created');
 
         console.log('Uploading file...');
-        await page.getByText(ticketName).click();
-        // await page.getByText('new ticket').click({ button: 'right' });
+        await page.getByText(cardName).click();
+        // await page.getByText('new card').click({ button: 'right' });
         // await page.waitForSelector('quick-card-editor-open-card');
         // await page.getByTestId('quick-card-editor-open-card').click({);
         await page.click('.window-sidebar .js-react-root button [data-testid="AttachmentIcon"]');
@@ -85,7 +86,13 @@ test.describe('Trello', () => {
     });
 });
 
-test('should drag n drop ticket', async ({ browser, request }) => {
+// Test case steps:
+// 1. Create board
+// 2. Get lists id
+// 3. Create card
+// 4. Open created board
+// 5. Drag card from first list to the second
+test('should drag n drop card', async ({ browser, request }) => {
     const boardName: string = 'Dragndrop board';
     const cardName: string = 'Draggable card';
 
