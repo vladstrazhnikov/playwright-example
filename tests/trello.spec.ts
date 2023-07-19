@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, request } from '@playwright/test';
 import { LoginPage } from '../pages/Login.page';
-import { deleteBoardRequest } from '../api/api.spec';
+import { deleteBoardRequest, createBoardRequest, getLists, createCardRequest } from '../api/api.spec';
 import fs from 'fs';
 
 const username = process.env._USERNAME || '';
@@ -27,11 +27,16 @@ test.describe('Trello', () => {
         const loginPage = new LoginPage(page);
 
         await createFile(filePath, content);
+
         const listName: string = 'To Do';
         const ticketName: string = 'New ticket';
+        const boardName: string = 'Playwright project board';
 
         console.log('Logging in...');
-        loginPage.login(username, password);
+        await loginPage.login(username, password);
+        const loggedInElement = await page.waitForSelector('[data-testid="header-member-menu-button"]', { state: 'visible' });
+        expect(loggedInElement).toBeTruthy();
+        // expect(page).toHaveTitle(/Boards [|] Trello/);
         console.log('Logging in done.');
 
         // const response = await request.get('https://api.trello.com/1/boards/{boardid}?key={}&token={}');
@@ -39,7 +44,6 @@ test.describe('Trello', () => {
         // console.log(respBody);
 
         console.log('Creating new board...');
-        const boardName: string = 'Playwright project board';
         await page.getByTestId('header-create-menu-button').click();
         await page.getByTestId('header-create-board-button').click();
         await page.getByTestId('create-board-title-input').type(boardName, { delay: 100 });
@@ -78,6 +82,30 @@ test.describe('Trello', () => {
         const deleteBoardResponse = await deleteBoardRequest(request, url, boardId, key, token);
         console.log('Board deleted', deleteBoardResponse.response.status(), deleteBoardResponse.json);
     });
+});
+
+test('should drag n drop ticket', async ({ browser, request }) => {
+    console.log('Creating board');
+    const createResponse = await createBoardRequest(request, url, key, token, 'test board');
+    const boardId = createResponse.json.id;
+    console.log('Getting lists...');
+    const getListsResponse = await getLists(request, url, boardId, key, token);
+    const firstList = getListsResponse.json[0].id;
+    await createCardRequest(request, url, key, token, 'New Card', firstList);
+    // to generate *.json file use npx codegen --save-storage=trello.json
+    const context = await browser.newContext({
+        storageState: './trello.json'
+    });
+    const page = await context.newPage();
+    await page.waitForTimeout(3000);
+    await page.goto('https://trello.com');
+    await page.getByText('test board').click();
+    // await page.locator('div[data-testid="list"]:first-of-type a[data-testid="trello-card"]').hover();
+    // await page.mouse.down();
+    // await page.locator('div[data-testid="list"]:nth-of-type(2)').hover();
+    // await page.mouse.up();
+    await page.dragAndDrop('div[data-testid="list"]:first-of-type a[data-testid="trello-card"]', 'div[data-testid="list"]:nth-of-type(2)');
+    await deleteBoardRequest(request, url, boardId, key, token);
 });
 
 async function createFile(filePath, content) {
