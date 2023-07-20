@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { FileGeneratorUtil } from '../utils/fileGenerator';
 import { LoginPage } from '../pages/Login.page';
-import { MainPage } from '../pages/Main.page';
+import { BoardPage } from '../pages/Board.page';
 import { CardPage } from '../pages/Card.page';
 import { deleteBoardRequest, createBoardRequest, getLists, createCardRequest } from '../api/api.spec';
+import { MainPage } from '../pages/Main.page';
 
 const username = process.env._USERNAME || '';
 const password = process.env._PASSWORD || '';
@@ -29,6 +30,7 @@ test.describe('Trello', () => {
     test('should create new board', async ({ page, request }) => {
         const loginPage = new LoginPage(page);
         const mainPage = new MainPage(page);
+        const boardPage = new BoardPage(page);
         const cardPage = new CardPage(page);
 
         await FileGeneratorUtil.createFile(filePath, content);
@@ -49,14 +51,9 @@ test.describe('Trello', () => {
         // console.log(respBody);
 
         console.log('Creating new board...');
-        await page.getByTestId('header-create-menu-button').click();
-        await page.getByTestId('header-create-board-button').click();
-        await page.getByTestId('create-board-title-input').type(boardName, { delay: 100 });
         // Wait for a response that contains '1/boards' in its url
         const responsePromise = page.waitForResponse(resp => resp.url().includes('1/boards'));
-        // Click the button that triggers the request
-        await page.getByTestId('create-board-submit-button').click();
-        // Get the response object
+        await mainPage.createNewBoard(boardName);
         const response = await responsePromise;
         // Log the response url, status and body
         console.log(response.url(), response.status());
@@ -67,11 +64,11 @@ test.describe('Trello', () => {
         console.log(response.status(), 'Board created');
 
         console.log('Creating new card...');
-        await mainPage.fillListNameInput(listName);
-        await mainPage.submitListButton();
-        await mainPage.clickAddCardButton();
-        await mainPage.fillCardNameInput(cardName);
-        await mainPage.submitCardButton();
+        await boardPage.fillListNameInput(listName);
+        await boardPage.submitListButton();
+        await boardPage.clickAddCardButton();
+        await boardPage.fillCardNameInput(cardName);
+        await boardPage.submitCardButton();
         console.log('Card created');
 
         console.log('Uploading file...');
@@ -111,14 +108,14 @@ test('should drag n drop card', async ({ browser, request }) => {
         storageState: './trello.json'
     });
     const page = await context.newPage();
-    const mainPage = new MainPage(page);
+    const boardPage = new BoardPage(page);
     await page.waitForTimeout(3000);
     await page.goto('https://trello.com');
     await page.getByText(boardName).click();
-    // await page.locator(mainPage.firstCard).hover();
+    // await page.locator(boardPage.firstCard).hover();
     // await page.mouse.down();
-    // await page.locator(mainPage.secondList).hover();
+    // await page.locator(boardPage.secondList).hover();
     // await page.mouse.up();
-    await page.dragAndDrop(mainPage.firstCard, mainPage.secondList);
+    await page.dragAndDrop(boardPage.firstCard, boardPage.secondList);
     await deleteBoardRequest(request, url, boardId, key, token);
 });
