@@ -40,9 +40,7 @@ test.describe('Trello', () => {
         const boardName: string = 'Playwright project board';
 
         console.log('Logging in...');
-        await loginPage.login(username, password);
-        const loggedInElement = await page.waitForSelector('[data-testid="header-member-menu-button"]', { state: 'visible' });
-        expect(loggedInElement).toBeTruthy();
+        await (await loginPage.login(username, password)).assertIsLogged();
         // expect(page).toHaveTitle(/Boards [|] Trello/);
         console.log('Logging in done.');
 
@@ -84,38 +82,39 @@ test.describe('Trello', () => {
         const deleteBoardResponse = await deleteBoardRequest(request, url, boardId, key, token);
         console.log('Board deleted', deleteBoardResponse.response.status(), deleteBoardResponse.json);
     });
-});
 
-// Test case steps:
-// 1. Create board
-// 2. Get lists id
-// 3. Create card
-// 4. Open created board
-// 5. Drag card from first list to the second
-test('should drag n drop card', async ({ browser, request }) => {
-    const boardName: string = 'Dragndrop board';
-    const cardName: string = 'Draggable card';
+    // Test case steps:
+    // 1. Create board
+    // 2. Get lists id
+    // 3. Create card
+    // 4. Open created board
+    // 5. Drag card from first list to the second
+    test('should drag n drop card', async ({ browser, request }) => {
+        const boardName: string = 'Dragndrop board';
+        const cardName: string = 'Draggable card';
 
-    console.log('Creating board');
-    const createResponse = await createBoardRequest(request, url, key, token, boardName);
-    const boardId = createResponse.json.id;
-    console.log('Getting lists...');
-    const getListsResponse = await getLists(request, url, boardId, key, token);
-    const firstList = getListsResponse.json[0].id;
-    await createCardRequest(request, url, key, token, cardName, firstList);
-    // to generate *.json file use npx codegen --save-storage=trello.json
-    const context = await browser.newContext({
-        storageState: './trello.json'
+        console.log('Creating board');
+        const createResponse = await createBoardRequest(request, url, key, token, boardName);
+        const boardId = createResponse.json.id;
+        console.log('Getting lists...');
+        const getListsResponse = await getLists(request, url, boardId, key, token);
+        const firstList = getListsResponse.json[0].id;
+        await createCardRequest(request, url, key, token, cardName, firstList);
+        // to generate *.json file use npx codegen --save-storage=trello.json
+        const context = await browser.newContext({
+            storageState: './trello.json'
+        });
+        const page = await context.newPage();
+        const boardPage = new BoardPage(page);
+        await page.waitForTimeout(3000);
+        await page.goto('https://trello.com');
+        await page.getByText(boardName).click();
+        // await page.locator(boardPage.firstCard).hover();
+        // await page.mouse.down();
+        // await page.locator(boardPage.secondList).hover();
+        // await page.mouse.up();
+        await page.dragAndDrop(boardPage.firstCard, boardPage.secondList);
+        await deleteBoardRequest(request, url, boardId, key, token);
     });
-    const page = await context.newPage();
-    const boardPage = new BoardPage(page);
-    await page.waitForTimeout(3000);
-    await page.goto('https://trello.com');
-    await page.getByText(boardName).click();
-    // await page.locator(boardPage.firstCard).hover();
-    // await page.mouse.down();
-    // await page.locator(boardPage.secondList).hover();
-    // await page.mouse.up();
-    await page.dragAndDrop(boardPage.firstCard, boardPage.secondList);
-    await deleteBoardRequest(request, url, boardId, key, token);
 });
+
