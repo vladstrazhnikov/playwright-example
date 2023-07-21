@@ -11,8 +11,6 @@ const password = process.env._PASSWORD || '';
 const key = process.env._SECRET_KEY || '';
 const token = process.env._TOKEN || '';
 const url = 'https://api.trello.com';
-const filePath = 'fixtures/data.txt';
-const content = 'message';
 
 // const browser = await chromium.launch();
 // const context = await browser.newContext();
@@ -28,25 +26,19 @@ test.describe('Trello', () => {
     // 3. Add card in To Do list
     // 4. Upload file in card
     test('should create new board', async ({ page, request }) => {
+        const filePath: string = 'fixtures/data.txt';
+        const content: string = 'message';
+        const listName: string = 'To Do';
+        const cardName: string = 'New card';
+        const boardName: string = 'Playwright project board';
+
         const loginPage = new LoginPage(page);
         const mainPage = new MainPage(page);
         const boardPage = new BoardPage(page);
         const cardPage = new CardPage(page);
 
         await FileGeneratorUtil.createFile(filePath, content);
-
-        const listName: string = 'To Do';
-        const cardName: string = 'New card';
-        const boardName: string = 'Playwright project board';
-
-        console.log('Logging in...');
         await (await loginPage.login(username, password)).assertIsLogged();
-        // expect(page).toHaveTitle(/Boards [|] Trello/);
-        console.log('Logging in done.');
-
-        // const response = await request.get('https://api.trello.com/1/boards/{boardid}?key={}&token={}');
-        // const respBody = JSON.parse(await response.text());
-        // console.log(respBody);
 
         console.log('Creating new board...');
         // Wait for a response that contains '1/boards' in its url

@@ -19,7 +19,6 @@ export class LoginPage {
         await this.page.click(this.continueButton);
         await this.page.fill(this.passwordInput, password);
         await this.page.click(this.loginSubmitButton);
-        await this.page.waitForTimeout(2000);
         return this;
     }
 
