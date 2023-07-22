@@ -41,7 +41,7 @@ test.describe('Trello', () => {
         await (await loginPage.login(username, password)).assertIsLogged();
 
         const responsePromise = page.waitForResponse(resp => resp.url().includes('/1\/boards'));
-        await (await mainPage.createNewBoard(boardName)).assertIsCreated();
+        await (await mainPage.createNewBoard(boardName)).assertIsCreated(boardName);
         const response = await responsePromise;
         const jsonData = await response.json();
         const boardId = jsonData.id;

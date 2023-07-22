@@ -13,7 +13,7 @@ export class MainPage {
         return this;
     }
 
-    async assertIsCreated() {
-        await expect(this.page.locator('*[data-testid="board-name-display"]')).toHaveText('testsetsdf');
+    async assertIsCreated(boardName: string) {
+        await expect(this.page.locator('*[data-testid="board-name-display"]')).toHaveText(boardName);
     }
 }

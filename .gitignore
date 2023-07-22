@@ -4,3 +4,4 @@ node_modules/
 /playwright/.cache/
 .env
 trello.json
+/tests/spec.http
