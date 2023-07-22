@@ -40,34 +40,27 @@ test.describe('Trello', () => {
         await FileGeneratorUtil.createFile(filePath, content);
         await (await loginPage.login(username, password)).assertIsLogged();
 
-        console.log('Creating new board...');
-        // Wait for a response that contains '1/boards' in its url
-        const responsePromise = page.waitForResponse(resp => resp.url().includes('1/boards'));
-        await mainPage.createNewBoard(boardName);
+        const responsePromise = page.waitForResponse(resp => resp.url().includes('/1\/boards'));
+        await (await mainPage.createNewBoard(boardName)).assertIsCreated();
         const response = await responsePromise;
-        // Log the response url, status and body
-        console.log(response.url(), response.status());
         const jsonData = await response.json();
         const boardId = jsonData.id;
-        // const respBody = JSON.parse(await response.text());
-        // console.log(respBody);
-        console.log(response.status(), 'Board created');
 
         console.log('Creating new card...');
         await boardPage.fillListNameInput(listName);
         await boardPage.submitListButton();
-        await boardPage.clickAddCardButton();
-        await boardPage.fillCardNameInput(cardName);
-        await boardPage.submitCardButton();
+        await boardPage.createCard(cardName);
         console.log('Card created');
 
         console.log('Uploading file...');
         await page.getByText(cardName).click();
-        // await page.getByText('new card').click({ button: 'right' });
-        // await page.waitForSelector('quick-card-editor-open-card');
-        // await page.getByTestId('quick-card-editor-open-card').click({);
         await page.click(cardPage.attachmentButton);
+        const attachmentsResponsePromise = page.waitForResponse(/https:\/\/trello\.com\/1\/cards\/([a-zA-Z0-9]+)\/attachments/);
         await page.locator(cardPage.cardFileInput).setInputFiles(filePath);
+        const attachmentsResponse = await attachmentsResponsePromise;
+        const attachmentsBody = await attachmentsResponse.json();
+        expect(attachmentsBody.isUpload).toBeTruthy();
+        await expect(page.locator('.attachment-thumbnail-name')).toHaveText(/data.txt/);
         console.log('File uploaded');
 
         console.log('Deleting new board...');
@@ -101,12 +94,7 @@ test.describe('Trello', () => {
         await page.waitForTimeout(3000);
         await page.goto('https://trello.com');
         await page.getByText(boardName).click();
-        // await page.locator(boardPage.firstCard).hover();
-        // await page.mouse.down();
-        // await page.locator(boardPage.secondList).hover();
-        // await page.mouse.up();
         await page.dragAndDrop(boardPage.firstCard, boardPage.secondList);
         await deleteBoardRequest(request, url, boardId, key, token);
     });
 });
-

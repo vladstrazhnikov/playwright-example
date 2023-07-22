@@ -12,4 +12,8 @@ export class MainPage {
         await this.page.getByTestId('create-board-submit-button').click();
         return this;
     }
+
+    async assertIsCreated() {
+        await expect(this.page.locator('*[data-testid="board-name-display"]')).toHaveText('testsetsdf');
+    }
 }

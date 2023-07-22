@@ -33,4 +33,10 @@ export class BoardPage {
         this.page.click('.cc-controls-section input[type="submit"]');
     }
 
+    async createCard(cardName: string): Promise<this> {
+        await this.clickAddCardButton();
+        await this.fillCardNameInput(cardName);
+        await this.submitCardButton();
+        return this;
+    }
 }
